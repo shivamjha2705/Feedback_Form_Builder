@@ -1,6 +1,20 @@
+import FormBuilder from "./Components/FormBuilder";
+import Navbar from "./Components/Navbar"
+import Dashboard from "./Pages/Dashboard"
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+
 const App = () => {
   return (
-    <div>App</div>
+    <Router>
+    <Navbar/>
+    <Routes>
+    
+    <Route path="/" element={<Dashboard />} />
+    <Route path="/form-builder" element={<FormBuilder />} />
+ 
+    </Routes>
+      
+    </Router>
   )
 }
 
