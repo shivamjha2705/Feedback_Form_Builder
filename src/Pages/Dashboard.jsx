@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { survey_logo } from "../assets";
 import { useNavigate } from 'react-router-dom';
 
@@ -10,7 +10,6 @@ const Dashboard = () => {
     const [formTitle, setFormTitle] = useState("");
     const navigate = useNavigate();
 
-    // Function to fetch forms from Firestore
     const fetchForms = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, "forms"));
@@ -34,16 +33,27 @@ const Dashboard = () => {
             return;
         }
         try {
-            navigate('/form-builder');
+            navigate('/form-builder', { state: { formTitle } });
         } catch (error) {
             console.error("Error creating form: ", error);
         }
+    };
+    const deleteForm = async (formId) => {
+        try {
+            await deleteDoc(doc(db, "forms", formId));
+            setForms((prevForms) => prevForms.filter((form) => form.id !== formId));
+        } catch (error) {
+            console.error("Error deleting form: ", error);
+        }
+    };
+
+    const editForm = (form) => {
+        navigate('/form-builder', { state: { formTitle: form.title, formId: form.id } });
     };
 
     return (
         <div className="h-screen p-6 bg-gray-50 mt-24">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* New Form Card */}
                 <div
                     className="flex flex-col items-center justify-center bg-white border-2 border-blue-500 rounded-lg shadow-lg p-4 cursor-pointer hover:bg-blue-100 transition duration-300 ease-in-out"
                     onClick={() => setIsModalOpen(true)}
@@ -52,17 +62,13 @@ const Dashboard = () => {
                     <p className="mt-4 text-lg font-semibold text-gray-800">New Form</p>
                 </div>
 
-                {/* Existing Forms */}
                 {forms.map((form) => (
                     <div
                         key={form.id}
-                        className="bg-white border-2 border-gray-200 rounded-lg shadow-lg "
+                        className="bg-white border-2 border-gray-200 rounded-lg shadow-lg"
                     >
                         <div className="flex items-center justify-center bg-yellow-200 p-2 rounded-t-lg">
-                            <img
-                                src={survey_logo}
-                                alt="Form Icon"
-                            />
+                            <img src={survey_logo} alt="Form Icon" />
                         </div>
                         <div className="my-4 flex flex-col gap-3 p-4">
                             <h2 className="text-lg font-bold text-gray-900">{form.title}</h2>
@@ -75,20 +81,24 @@ const Dashboard = () => {
                                 View Submissions
                             </button>
                             <div className="flex gap-2 w-full justify-center">
-                                <button className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600 hover:shadow-btn-hover transition">
+                                <button
+                                    onClick={() => editForm(form)}
+                                    className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-600 hover:shadow-btn-hover transition"
+                                >
                                     Edit
                                 </button>
-                                <button className="bg-sky-500 text-white px-4 py-2 rounded hover:bg-sky-600  hover:shadow-btn-hover transition">
+                                <button
+                                    onClick={() => deleteForm(form.id)}
+                                    className="bg-sky-500 text-white px-4 py-2 rounded hover:bg-sky-600  hover:shadow-btn-hover transition"
+                                >
                                     Delete
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Modal for Creating New Form */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
                     <div className="bg-white text-black rounded-lg py-4 w-96 shadow-lg">
@@ -115,7 +125,6 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-
             )}
         </div>
     );
